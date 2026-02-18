@@ -1,0 +1,44 @@
+name: 'Pawn Compile Action'
+description: 'Download the Zeex Pawn compiler and compile Pawn (.pwn) files.'
+branding:
+  icon: 'terminal'
+  color: 'blue'
+
+inputs:
+  source:
+    description: 'Path to the Pawn (.pwn) file to compile.'
+    required: true
+
+  include-path:
+    description: 'Path to the include directory.'
+    required: false
+    default: 'pawno/include'
+
+  version:
+    description: 'Zeex Pawn compiler version.'
+    required: false
+    default: '3.10.10'
+
+  args:
+    description: 'Additional arguments passed to the compiler.'
+    required: false
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Download and Install Pawn Compiler
+      shell: bash
+      run: |
+        wget https://github.com/pawn-lang/compiler/releases/download/v${{ inputs.version }}/pawnc-${{ inputs.version }}-linux.tar.gz
+        tar -xzf pawnc-${{ inputs.version }}-linux.tar.gz
+
+        sudo cp pawnc-${{ inputs.version }}-linux/bin/pawncc /usr/local/bin/
+        sudo chmod +x /usr/local/bin/pawncc
+
+        sudo cp pawnc-${{ inputs.version }}-linux/lib/libpawnc.so /usr/local/lib/
+        sudo ldconfig
+    
+    - name: Compile Pawn File
+      shell: bash
+      run: |
+        pawncc ${{ inputs.source }} -i"${{ inputs.include-path }}" ${{ inputs.args }}
