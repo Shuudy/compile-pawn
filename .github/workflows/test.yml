@@ -1,0 +1,29 @@
+name: CI Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test:
+    name: Pawn Compile Test (v${{ matrix.compiler_version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler_version: [3.10.10, 3.10.9, 3.10.8]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare Test Script
+        run: echo 'main() {}' > ci_test.pwn
+
+      - name: Run Action with Compiler Version ${{ matrix.compiler_version }}
+        uses: ./
+        with:
+          source: 'ci_test.pwn'
+          version: ${{ matrix.compiler_version }}
+          args: '-d3'
