@@ -26,18 +26,31 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Download and Install Pawn Compiler
+
+    - name: Cache Pawn Compiler
+      id: cache-pawn-compiler
+      uses: actions/cache@v5
+      with:
+        path: ./pawn-compiler
+        key: ${{ runner.os }}-pawn-compiler-${{ inputs.version }}
+
+    - name: Download Pawn Compiler
+      if: steps.cache-pawn-compiler.outputs.cache-hit != 'true'
       shell: bash
       run: |
-        wget https://github.com/pawn-lang/compiler/releases/download/v${{ inputs.version }}/pawnc-${{ inputs.version }}-linux.tar.gz
-        tar -xzf pawnc-${{ inputs.version }}-linux.tar.gz
+        mkdir -p ./pawn-compiler
+        wget -q https://github.com/pawn-lang/compiler/releases/download/v${{ inputs.version }}/pawnc-${{ inputs.version }}-linux.tar.gz
+        tar -xzf pawnc-${{ inputs.version }}-linux.tar.gz -C ./pawn-compiler --strip-components=1
 
-        sudo cp pawnc-${{ inputs.version }}-linux/bin/pawncc /usr/local/bin/
+    - name: Install Pawn Compiler
+      shell: bash
+      run: |
+        sudo cp ./pawn-compiler/bin/pawncc /usr/local/bin/
         sudo chmod +x /usr/local/bin/pawncc
 
-        sudo cp pawnc-${{ inputs.version }}-linux/lib/libpawnc.so /usr/local/lib/
+        sudo cp ./pawn-compiler/lib/libpawnc.so /usr/local/lib/
         sudo ldconfig
-    
+
     - name: Compile Pawn File
       shell: bash
       run: |
